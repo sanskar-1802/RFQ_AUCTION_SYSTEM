@@ -1,70 +1,230 @@
-# Getting Started with Create React App
+# RFQ Auction System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 📌 Overview
 
-## Available Scripts
+This project implements a **Request for Quotation (RFQ) system with British Auction logic**.
 
-In the project directory, you can run:
+Suppliers compete by placing bids, and the system dynamically extends auction time based on configurable rules. The goal is to ensure **fair competition, prevent last-minute manipulation, and provide transparent bidding**.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🚀 Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### RFQ Management
 
-### `npm test`
+* Create RFQ with configurable auction parameters
+* Define bid start, close, and forced close times
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Bidding System
 
-### `npm run build`
+* Suppliers can place bids
+* Automatic ranking (L1, L2, L3...) based on price
+* Validation to prevent invalid bids
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Auction Extension Logic
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+* Trigger window (X minutes)
+* Extension duration (Y minutes)
+* Extension triggers:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  * Bid placed in last X minutes
+  * Rank change
+  * Lowest bidder (L1) change
 
-### `npm run eject`
+### Auction Lifecycle
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+* ACTIVE → CLOSED → FORCE_CLOSED
+* No bids allowed after close time
+* Hard stop at forced close time
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Activity Logs
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+* Tracks:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+  * Bid submissions
+  * Auction extensions
+* Provides transparency and audit trail
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🧱 Tech Stack
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+* **Frontend:** React
+* **Backend:** FastAPI (Python)
+* **Database:** PostgreSQL
+* **ORM:** SQLAlchemy
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🏗️ High Level Design
 
-### Analyzing the Bundle Size
+The system follows a **3-tier architecture**:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+* **Frontend (React):** User interface for auctions, bidding, and logs
+* **Backend (FastAPI):** Handles business logic, validation, and auction rules
+* **Database (PostgreSQL):** Stores RFQs, bids, suppliers, and logs
 
-### Making a Progressive Web App
+📌 See architecture diagram:
+`/docs/HLD.png`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## 🗄️ Database Schema
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Main tables:
 
-### Deployment
+### RFQ
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+* id (PK)
+* name
+* bid_start_time
+* bid_close_time
+* current_bid_close_time
+* forced_close_time
+* trigger_window_minutes
+* extension_duration_minutes
+* extension_type
+* status
 
-### `npm run build` fails to minify
+### Bids
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+* id (PK)
+* rfq_id (FK)
+* supplier_id (FK)
+* price
+* created_at
+
+### Suppliers
+
+* id (PK)
+* name
+
+### AuctionLogs
+
+* id (PK)
+* rfq_id (FK)
+* event_type
+* description
+* created_at
+
+📌 See schema diagram:
+`/docs/DB_Schema.png`
+
+---
+
+## 🔄 System Flow
+
+1. User views RFQ list
+2. Opens RFQ details
+3. Places bid
+4. Backend validates:
+
+   * RFQ exists
+   * Supplier exists
+   * Auction time validity
+5. Bid is stored
+6. Ranking updated
+7. Auction extension logic applied
+8. Logs recorded
+
+---
+
+## ⚙️ Backend Features
+
+* REST APIs for RFQ, bids, suppliers
+* Auction validation:
+
+  * No bids after bid close time
+  * No bids after forced close time
+* Auction extension service
+* Status updates (ACTIVE / CLOSED / FORCE_CLOSED)
+
+---
+
+## 🎨 Frontend Features
+
+* RFQ List Page:
+
+  * Shows auctions, status, lowest bid
+
+* RFQ Details Page:
+
+  * Timer countdown
+  * Bid submission
+  * Ranking table (L1, L2, L3)
+  * Auction configuration
+  * Activity logs
+
+* Components:
+
+  * Timer
+  * Bid Form
+  * Bid List
+  * Logs List
+
+---
+
+## 🧪 Setup Instructions
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+---
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+---
+
+## 🧠 Key Design Decisions
+
+* **Backend validation enforced** to prevent invalid bids
+* **Forced close time ensures auction termination**
+* **Extension logic implemented in service layer** for modularity
+* **Logs provide auditability and transparency**
+
+---
+
+## ⚠️ Assumptions
+
+* Simplified supplier model
+* No authentication system
+* Quote fields minimized
+
+---
+
+## 🔮 Future Improvements
+
+* Real-time updates using WebSockets
+* Authentication and user roles
+* Advanced analytics dashboard
+* Notifications for bid updates
+
+---
+
+## 📎 Submission Artifacts
+
+* HLD Diagram → `/docs/HLD.png`
+* Database Schema → `/docs/DB_Schema.png`
+* Backend Code → `/backend`
+* Frontend Code → `/frontend`
+
+---
+
+## 🙌 Conclusion
+
+This project demonstrates a scalable and modular implementation of a **British Auction RFQ system**, focusing on fairness, extensibility, and clear system design.
+
+---
+
+**Thank you for reviewing this submission.**
